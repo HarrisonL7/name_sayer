@@ -39,7 +39,7 @@ list() {
 		printf "\nNo creations exist\n\n"
 		empty=true
 
-	else 
+	else
 		# otherwise loop through folder and list contents
 
 		printf "\n Creations: \n\n"
@@ -68,7 +68,7 @@ play() {
 	# list all creations
 	list
 
-	# if list is empty return to main menu 
+	# if list is empty return to main menu
 	if $empty; then
 		return
 	fi
@@ -82,8 +82,8 @@ play() {
 	fi
 
 	# if user has selected, play selection
-	printf "\nPlaying... \n"
-	ffplay -loglevel quiet -autoexit -i Data/"$play"/"$play"_merged.mkv
+	printf "\n 	Playing audio... \n"
+	ffplay -loglevel quiet -autoexit -i Data/"$creation"/"$creation"_merged.mkv
 
 }
 
@@ -91,7 +91,7 @@ delete() {
 	#list all creations
 	list
 
-	# if list is empty return to main menu 
+	# if list is empty return to main menu
 	if $empty; then
 		return
 	fi
@@ -115,7 +115,7 @@ delete() {
 
 		printf "\n"
 		read  -p "Are you sure you want to delete $deleteName [y/n]?: " yn
-		case $yn in 
+		case $yn in
 			[Yy] | [Yy][Ee][Ss] ) rm -rf Data/"$deletion";
 			 					printf "\n 	$deleteName was successfully deleted. \n\n"; break;;
 			[Nn] | [Nn][Oo] ) printf "\n 	$deleteName was not deleted. \n\n"; break;;
@@ -126,7 +126,7 @@ delete() {
 
 
 }
- 
+
 create() {
 	printf " Enter (c) to cancel\n"
 	#repeatedly asks the user for a valid name
@@ -141,20 +141,22 @@ create() {
 
 		#replace spaces with underscores
 		name="${name// /_}"
-			
+
 		# if name doesn't exist, create it
 		if [ ! -d Data/$name ]; then
 			mkdir -p Data/"$name"; break
 		fi
 
 		printf "\n	Creation already exists, please try another name.\n"
-	done 
+	done
 
+	# turn name into displayable format
+	text="${name//_/ }"
 
 	# generate text video
-	ffmpeg -loglevel quiet -f lavfi -i color=c=black:s=320x240:d=5 -vf \
+	ffmpeg -f lavfi -i color=c=black:s=320x240:d=5 -vf \
 	"drawtext=fontfile=/path/to/font.ttf:fontsize=28: \
- 	fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2:text='$name'" \
+ 	fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2:text='$text'" \
 	Data/"$name"/"$name"_video.mp4
 
 
@@ -167,8 +169,8 @@ create() {
 		read -n 1 -s -r -p "Press any key to begin recording (5 seconds) "
 
 		# record audio for 5 seconds
-		printf "\n\nRecording audio...\n"
-		ffmpeg -loglevel quiet -f alsa -i default Data/"$name"/"$name"_audio.wav
+		printf "\n\n 	Recording audio...\n"
+		ffmpeg -y -loglevel quiet -f alsa -t 5 -i default Data/"$name"/"$name"_audio.wav
 
 		# ask user if they want to hear the audio
 		while true; do
@@ -176,8 +178,8 @@ create() {
 			printf "\n"
 			read  -p "Do you wish to hear the recorded audio [y/n]?: " yn
 
-			case $yn in 
-				[Yy] | [Yy][Ee][Ss] ) printf "\n\nPlaying audio...";
+			case $yn in
+				[Yy] | [Yy][Ee][Ss] ) printf "\n 	Playing audio...";
 				ffplay -loglevel quiet -autoexit -i Data/"$name"/"$name"_audio.wav; break;;
 
 				[Nn] | [Nn][Oo] ) recording=false; break;;
@@ -200,14 +202,15 @@ create() {
 		done
 
 	done
-	
-	
+
+
 	#combine audio and video
-	ffmpeg -loglevel quiet -i Data/"$name"/"$name"_video.mp4 -i Data/"$name"/"$name"_audio.mp3 -filter_complex\
-	amix=inputs=2 Data/"$name"/"$name"_merged.mkv
+	# ffmpeg -i Data/"$name"/"$name"_video.mp4 -i Data/"$name"/"$name"_audio.wav -filter_complex\
+	# amix=inputs=2 Data/"$name"/"$name"_merged.mkv
+	ffmpeg -i Data/"$name"/"$name"_video.mp4 -i Data/"$name"/"$name"_audio.wav Data/"$name"/"$name"_merged.mkv
 
 	#remove audio and video files
-	rm -f Data/"$name"/"$name"_video.mp4 Data/"$name"/"$name"_audio.mp3
+	rm -f Data/"$name"/"$name"_video.mp4 Data/"$name"/"$name"_audio.wav
 
 	# turn name into displayable format and print message to user
 	displayName="${name//_/ }"
@@ -236,7 +239,7 @@ while true; do
 	# ask user for selection
 	read  -p "Enter a selection [l/p/d/c/q]: " selection
 
-		case $selection in 
+		case $selection in
 			[Ll] | [Ll][Ii][Ss][Tt] ) clear;list;;
 			[Pp] | [Pp][Ll][Aa][Yy] ) clear;play;;
 			[Dd] | [Dd][Ee][Ll][Ee][Tt][Ee] ) clear;delete;;
@@ -247,5 +250,3 @@ while true; do
 
 		read -n 1 -s -r -p "Press any key to return to main menu "
 done
-
-
