@@ -2,6 +2,32 @@
 
 mkdir -p Data
 
+getSelection() {
+
+	printf " Enter (c) to cancel\n\n"
+	cancelled=false
+
+	# keep asking user for selection, until successful or cancelled
+	while true; do
+		read  -p "Enter the name of the creation you wish to $1: " creation
+
+		# if user cancels, return
+		if [ "$creation" = "C" ] || [ "$creation" = "c" ]; then
+			printf "\n 	Cancelled $1.\n\n"; cancelled=true; return
+		fi
+
+		# replace spaces with underscores
+		creation="${creation// /_}"
+
+		# if it exists, return
+		if [ -d Data/$creation ]; then
+				return
+		fi
+
+		printf "\n 	That creation does not exist, please try again.\n\n"
+	done
+}
+
 list() {
 
 	empty=false
@@ -47,28 +73,17 @@ play() {
 		return
 	fi
 
-	printf " Enter (c) to cancel\n\n"
+	#select a creation
+	getSelection "play"
 
-	while true; do
-		read  -p "Enter the name of the creation you wish to play: " play
+	# if the user has cancelled return to the main menu
+	if $cancelled; then
+		return
+	fi
 
-		if [ "$play" = "C" ] || [ "$play" = "c" ]; then
-			printf "\n 	Playing cancelled.\n\n"
-			return
-		fi
-
-		# replace spaces with underscores
-		play="${play// /_}"
-
-		# play it if it exists
-		if [ -d Data/$play ]; then
-				printf "\nPlaying... \n"
-				ffplay -loglevel quiet -autoexit -i Data/"$play"/"$play"_merged.mkv
-				break
-		fi
-
-		printf "\n 	That creation does not exist, please try again.\n\n"
-	done
+	# if user has selected, play selection
+	printf "\nPlaying... \n"
+	ffplay -loglevel quiet -autoexit -i Data/"$play"/"$play"_merged.mkv
 
 }
 
@@ -81,54 +96,48 @@ delete() {
 		return
 	fi
 
-	printf " Enter (c) to cancel \n\n"
+#	select a creation
+	getSelection "delete"
 
+	# if the user has cancelled return to the main menu
+	if $cancelled; then
+		return
+	fi
+
+	deletion=$creation
+
+	# if selection is successful, confirm deletion with user
 	while true; do
-		read  -p "Enter the name of the creation you wish to delete: " deletion
+
+		# make selection name more readable
+		deleteName="${deletion//_/ }"
 
 
-		if [ "$deletion" = "C" ] || [ "$deletion" = "c" ]; then
-			printf "\n 	Deletion cancelled.\n\n"
-			return
-		fi
+		printf "\n"
+		read  -p "Are you sure you want to delete $deleteName [y/n]?: " yn
+		case $yn in 
+			[Yy] | [Yy][Ee][Ss] ) rm -rf Data/"$deletion";
+			 					printf "\n 	$deleteName was successfully deleted. \n\n"; break;;
+			[Nn] | [Nn][Oo] ) printf "\n 	$deleteName was not deleted. \n\n"; break;;
+			* ) printf "\n 	Selection invalid, please try again.\n\n";;
+		esac
 
-		# replace spaces with underscores
-		deletion="${deletion// /_}"
-
-		# if it exists confirm deletion with user
-		if [ -d Data/$deletion ]; then
-
-			# keep asking until valid answer is received
-			while true; do
-
-				# make selection name more readable
-				deleteName="${deletion//_/ }"
-
-				printf "\n"
-				read  -p "Are you sure you want to delete $deleteName [y/n]?: " yn
-
-				case $yn in 
-					[Yy] | [Yy][Ee][Ss] ) rm -rf Data/"$deletion";
-					 					printf "\n 	$deleteName was successfully deleted. \n\n"; break;;
-					[Nn] | [Nn][Oo] ) printf "\n 	$deleteName was not deleted. \n\n"; break;;
-					* ) printf "\n 	Selection invalid, please try again.\n\n";;
-				esac
-
-			done
-
-			break
-		fi
-
-		printf "\n 	That creation does not exist, please try again.\n\n"
 	done
+
+
 }
  
 create() {
-
+	printf " Enter (c) to cancel\n"
 	#repeatedly asks the user for a valid name
 	while true; do
 		printf "\n"
 		read  -p "Enter a name for your creation: " name
+
+		# user cancelled
+		if [ "$name" = "C" ] || [ "$name" = "c" ]; then
+			printf "\n 	Create cancelled.\n\n";return;
+		fi
 
 		#replace spaces with underscores
 		name="${name// /_}"
@@ -137,6 +146,7 @@ create() {
 		if [ ! -d Data/$name ]; then
 			mkdir -p Data/"$name"; break
 		fi
+
 		printf "\n	Creation already exists, please try another name.\n"
 	done 
 
@@ -199,7 +209,10 @@ create() {
 	#remove audio and video files
 	rm -f Data/"$name"/"$name"_video.mp4 Data/"$name"/"$name"_audio.mp3
 
-	printf "\n 	$name was successfully created\n\n"
+	# turn name into displayable format and print message to user
+	displayName="${name//_/ }"
+
+	printf "\n 	$displayName was successfully created\n\n"
 }
 
 # ask user for action, keep repeating until program is quit
