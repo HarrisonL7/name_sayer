@@ -171,7 +171,9 @@ create() {
 		# record audio for 5 seconds
 		printf "\n\n 	Recording audio...\n"
 		ffmpeg -y -loglevel quiet -f alsa -t 5 -i default Data/"$name"/"$name"_audio.wav
-
+		
+		printf "\n	Done!\n"		
+	
 		# ask user if they want to hear the audio
 		while true; do
 
