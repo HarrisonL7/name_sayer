@@ -154,7 +154,7 @@ create() {
 	text="${name//_/ }"
 
 	# generate text video
-	ffmpeg -f lavfi -i color=c=black:s=320x240:d=5 -vf \
+	ffmpeg -loglevel quiet -f lavfi -i color=c=black:s=320x240:d=5 -vf \
 	"drawtext=fontfile=/path/to/font.ttf:fontsize=28: \
  	fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2:text='$text'" \
 	Data/"$name"/"$name"_video.mp4
@@ -207,15 +207,12 @@ create() {
 	#combine audio and video
 	# ffmpeg -i Data/"$name"/"$name"_video.mp4 -i Data/"$name"/"$name"_audio.wav -filter_complex\
 	# amix=inputs=2 Data/"$name"/"$name"_merged.mkv
-	ffmpeg -i Data/"$name"/"$name"_video.mp4 -i Data/"$name"/"$name"_audio.wav Data/"$name"/"$name"_merged.mkv
+	ffmpeg -loglevel quiet -i Data/"$name"/"$name"_video.mp4 -i Data/"$name"/"$name"_audio.wav Data/"$name"/"$name"_merged.mkv
 
 	#remove audio and video files
 	rm -f Data/"$name"/"$name"_video.mp4 Data/"$name"/"$name"_audio.wav
 
-	# turn name into displayable format and print message to user
-	displayName="${name//_/ }"
-
-	printf "\n 	$displayName was successfully created\n\n"
+	printf "\n 	$text was successfully created\n\n"
 }
 
 # ask user for action, keep repeating until program is quit
